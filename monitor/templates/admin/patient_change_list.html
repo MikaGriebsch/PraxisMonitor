@@ -1,0 +1,141 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block content %}
+<div class="kanban-board">
+  <!-- Wartend -->
+  <div class="column" data-status="waiting">
+    <h3>Wartend</h3>
+    {% for patient in waiting %}
+    <div class="patient-card"
+         data-id="{{ patient.id }}"
+         draggable="true">
+      {{ patient.first_name }} {{ patient.last_name }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- In Behandlung -->
+  <div class="column" data-status="in_treatment">
+    <h3>In Behandlung</h3>
+    {% for patient in in_treatment %}
+    <div class="patient-card"
+         data-id="{{ patient.id }}"
+         draggable="true">
+      {{ patient.first_name }} {{ patient.last_name }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Fertig -->
+  <div class="column" data-status="done">
+    <h3>Fertig</h3>
+    {% for patient in done %}
+    <div class="patient-card"
+         data-id="{{ patient.id }}"
+         draggable="true">
+      {{ patient.first_name }} {{ patient.last_name }}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+.kanban-board {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.column {
+  background: #f0f0f0;
+  padding: 15px;
+  min-width: 250px;
+  border-radius: 5px;
+  min-height: 300px;
+}
+
+.patient-card {
+  background: white;
+  padding: 10px;
+  margin: 10px 0;
+  cursor: move;
+  border: 1px solid #ddd;
+  transition: transform 0.2s;
+}
+
+.patient-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.column.drop-target {
+  background: #e3ffe3;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let draggedItem = null;
+
+  // Drag Start
+  document.querySelectorAll('.patient-card').forEach(card => {
+    card.addEventListener('dragstart', (e) => {
+      draggedItem = e.target;
+      e.target.classList.add('dragging');
+    });
+  });
+
+  // Drag End
+  document.querySelectorAll('.patient-card').forEach(card => {
+    card.addEventListener('dragend', (e) => {
+      e.target.classList.remove('dragging');
+      draggedItem = null;
+    });
+  });
+
+  // Column Handling
+  document.querySelectorAll('.column').forEach(column => {
+    column.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      column.classList.add('drop-target');
+    });
+
+    column.addEventListener('dragleave', (e) => {
+      column.classList.remove('drop-target');
+    });
+
+    column.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      column.classList.remove('drop-target');
+
+      const newStatus = column.dataset.status;
+      const patientId = draggedItem.dataset.id;
+
+      // AJAX Update
+      try {
+        const response = await fetch("{% url 'update_status' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': "{{ csrf_token }}"
+          },
+          body: JSON.stringify({
+            id: patientId,
+            status: newStatus
+          })
+        });
+
+        if (response.ok) {
+          // Move element visually
+          draggedItem.parentNode.removeChild(draggedItem);
+          column.appendChild(draggedItem);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

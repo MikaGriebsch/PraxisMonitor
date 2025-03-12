@@ -1,9 +1,16 @@
 from django.db import models
 
 
-class Patient (models.Model):
+class Patient(models.Model):
+    STATUS_CHOICES = [
+        ('waiting', 'Wartend'),
+        ('in_treatment', 'In Behandlung'),
+        ('done', 'Fertig'),
+    ]
+
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
 
     class Meta:
         verbose_name = 'Patient'
