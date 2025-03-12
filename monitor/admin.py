@@ -4,6 +4,7 @@ from .models import Patient
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
     list_display = ("first_name", "last_name", "get_status_display")
+    list_filter = ("status",)
     change_list_template = 'admin/patient_change_list.html'
 
     def changelist_view(self, request, extra_context=None):
