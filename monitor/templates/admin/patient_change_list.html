@@ -1,5 +1,5 @@
 {% extends "admin/change_list.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block content %}
 <div class="kanban-board">
@@ -11,6 +11,7 @@
          data-id="{{ patient.id }}"
          draggable="true">
       {{ patient.first_name }} {{ patient.last_name }}
+      <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
     {% endfor %}
   </div>
@@ -23,6 +24,7 @@
          data-id="{{ patient.id }}"
          draggable="true">
       {{ patient.first_name }} {{ patient.last_name }}
+      <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
     {% endfor %}
   </div>
@@ -35,32 +37,39 @@
          data-id="{{ patient.id }}"
          draggable="true">
       {{ patient.first_name }} {{ patient.last_name }}
+      <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
     {% endfor %}
   </div>
 </div>
+
+<!-- Standard-Admin-Tabelle unter dem Kanban-Board -->
+{{ block.super }}
 
 <style>
 .kanban-board {
   display: flex;
   gap: 20px;
   padding: 20px;
+  background: #F4F6F9;
+  min-height: 70vh;
 }
 
 .column {
-  background: #f0f0f0;
+  background: #e9ecef;
   padding: 15px;
-  min-width: 250px;
-  border-radius: 5px;
-  min-height: 300px;
+  width: 300px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .patient-card {
   background: white;
-  padding: 10px;
+  padding: 12px;
   margin: 10px 0;
   cursor: move;
-  border: 1px solid #ddd;
+  border: 1px solid #dee2e6;
+  position: relative;
   transition: transform 0.2s;
 }
 
@@ -69,8 +78,25 @@
   transform: scale(0.95);
 }
 
+.status-badge {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #6c757d;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+}
+
 .column.drop-target {
-  background: #e3ffe3;
+  background: #d4edda !important;
+  border: 2px dashed #28a745;
+}
+.ui-draggable-dragging {
+  opacity: 0.7 !important;
+  z-index: 1000 !important;
 }
 </style>
 
@@ -78,63 +104,52 @@
 document.addEventListener('DOMContentLoaded', () => {
   let draggedItem = null;
 
-  // Drag Start
-  document.querySelectorAll('.patient-card').forEach(card => {
-    card.addEventListener('dragstart', (e) => {
-      draggedItem = e.target;
-      e.target.classList.add('dragging');
-    });
-  });
+  const dragStartHandler = (e) => {
+    draggedItem = e.target;
+    e.target.classList.add('dragging');
+  };
 
-  // Drag End
-  document.querySelectorAll('.patient-card').forEach(card => {
-    card.addEventListener('dragend', (e) => {
-      e.target.classList.remove('dragging');
-      draggedItem = null;
-    });
-  });
+  const dragEndHandler = (e) => {
+    e.target.classList.remove('dragging');
+  };
 
-  // Column Handling
-  document.querySelectorAll('.column').forEach(column => {
-    column.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      column.classList.add('drop-target');
-    });
+  const dropHandler = async (e) => {
+    e.preventDefault();
+    const column = e.currentTarget;
 
-    column.addEventListener('dragleave', (e) => {
-      column.classList.remove('drop-target');
-    });
+    if (!draggedItem) return;
 
-    column.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      column.classList.remove('drop-target');
+    const newStatus = column.dataset.status;
+    const patientId = draggedItem.dataset.id;
 
-      const newStatus = column.dataset.status;
-      const patientId = draggedItem.dataset.id;
+    try {
+      const response = await fetch("{% url 'monitor:update_status' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ id: patientId, status: newStatus })
+      });
 
-      // AJAX Update
-      try {
-        const response = await fetch("{% url 'update_status' %}", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': "{{ csrf_token }}"
-          },
-          body: JSON.stringify({
-            id: patientId,
-            status: newStatus
-          })
-        });
-
-        if (response.ok) {
-          // Move element visually
-          draggedItem.parentNode.removeChild(draggedItem);
-          column.appendChild(draggedItem);
-        }
-      } catch (error) {
-        console.error('Error:', error);
+      if (response.ok) {
+        // Seite nach erfolgreichem Update neu laden
+        window.location.reload(true);
       }
-    });
+    } catch (error) {
+      console.error('Fehler:', error);
+    }
+  };
+
+  // Event Listener
+  document.querySelectorAll('.patient-card').forEach(card => {
+    card.addEventListener('dragstart', dragStartHandler);
+    card.addEventListener('dragend', dragEndHandler);
+  });
+
+  document.querySelectorAll('.column').forEach(column => {
+    column.addEventListener('dragover', (e) => e.preventDefault());
+    column.addEventListener('drop', dropHandler);
   });
 });
 </script>
