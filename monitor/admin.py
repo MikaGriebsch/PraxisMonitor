@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Patient
+from .models import *
 
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
@@ -15,3 +15,8 @@ class PatientAdmin(admin.ModelAdmin):
             'done': Patient.objects.filter(status='done'),
         })
         return super().changelist_view(request, extra_context=extra_context)
+
+
+@admin.register(Video)
+class VideoAdmin(admin.ModelAdmin):
+    list_display = ('title', 'created_at')

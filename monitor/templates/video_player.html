@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Wall</title>
+    {% load static %}
+    <style>
+        #patient-alert-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.5s;
+        }
+
+        .alert-content {
+            text-align: center;
+            color: white;
+            padding: 3rem;
+            border: 4px solid #fff;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+
+        #patient-name-display {
+            font-size: 6em;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #ff4444;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        .instruction-text {
+            font-size: 2em;
+            margin-top: 2em;
+            color: #fff;
+            font-style: italic;
+            letter-spacing: 1px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        #videoPlayer {
+            width: 100%;
+            height: 100vh;
+            object-fit: cover;
+            display: none;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="patient-alert-container">
+        <div class="alert-content">
+            <h1 id="patient-name-display"></h1>
+            <p class="instruction-text">Bitte begeben Sie sich umgehend ins Wartezimmer</p>
+        </div>
+    </div>
+
+    <video id="videoPlayer" controls autoplay muted>
+        <source src="" type="video/mp4">
+    </video>
+
+    <script>
+        // Konfiguration
+        const config = {
+            checkInterval: 1000,
+            alertDuration: 3000
+        };
+
+        // Zustandsverwaltung
+        let state = {
+            currentTimeout: null,
+            lastProcessedPatient: null,
+            currentVideo: 0,
+            videos: [{% for video in videos %}'{{ video.video_file.url }}',{% endfor %}],
+            player: document.getElementById('videoPlayer'),
+            alertContainer: document.getElementById('patient-alert-container')
+        };
+
+        // Video-Initialisierung
+        function initializeVideo() {
+            if(state.videos.length > 0) {
+                state.player.style.display = 'block';
+                playNext();
+                state.player.addEventListener('ended', playNext);
+            }
+        }
+
+        function playNext() {
+            state.currentVideo = (state.currentVideo + 1) % state.videos.length;
+            state.player.src = state.videos[state.currentVideo];
+            state.player.play().catch(() => {
+                state.player.muted = true;
+                state.player.play();
+            });
+        }
+
+        // Patientenstatus-Überprüfung
+        async function checkActivePatient() {
+            try {
+                const response = await fetch("{% url 'monitor:active_patient' %}", {
+                    headers: {
+                        'X-CSRFToken': "{{ csrf_token }}"
+                    }
+                });
+
+                const data = await response.json();
+
+                if(data.active) {
+                    const isNewPatient = data.id !== state.lastProcessedPatient?.id;
+                    const isNewStatus = new Date(data.status_changed) > new Date(state.lastProcessedPatient?.status_changed || 0);
+
+                    if(isNewPatient || isNewStatus) {
+                        state.lastProcessedPatient = data;
+
+                        state.player.style.display = 'none';
+                        state.player.pause();
+                        state.alertContainer.style.display = 'flex';
+                        document.getElementById('patient-name-display').textContent = data.name;
+
+                        if(state.currentTimeout) clearTimeout(state.currentTimeout);
+
+                        state.currentTimeout = setTimeout(() => {
+                            state.alertContainer.style.display = 'none';
+                            state.player.style.display = 'block';
+                            if(state.player.paused) state.player.play();
+                        }, config.alertDuration);
+                    }
+                } else {
+                    state.alertContainer.style.display = 'none';
+                    state.player.style.display = 'block';
+                    if(state.player.paused) state.player.play();
+                }
+            } catch(e) {
+                console.error('Fehler:', e);
+            }
+        }
+
+        // Initialisierung
+        window.addEventListener('load', () => {
+            initializeVideo();
+            setInterval(checkActivePatient, config.checkInterval);
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,12 @@
 from django.contrib import admin
 from django.urls import path, include
 
+from django.conf import settings
+from django.conf.urls.static import static
+
+# Vorhandene URL-Konfiguration ersetzen durch:
 urlpatterns = [
-    path('admin/monitor/', include('monitor.urls')),  # Eigenen Namespace erstellen
     path('admin/', admin.site.urls),
+    path('', include('monitor.urls')),  # App-URLs unter der Root-URL
 ]
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
