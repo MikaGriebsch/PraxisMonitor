@@ -112,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'de'
 
 TIME_ZONE = 'UTC'
 
@@ -137,8 +137,8 @@ JAZZMIN_SETTINGS = {
     'site_title': 'Admin - Praxis für Frauen',
     "site_header": "",
     "site_brand": "Praxis für Frauen",
-    "site_logo": "logo1.png",
-    "login_logo": "logo1.png",
+    "site_logo": "logo1.jpg",
+    "login_logo": "logo1.jpg",
     "login_logo_dark": None,
     "welcome_sign": "Dagmar Roßner Admin",
     "copyright": "Mika Griebsch",
@@ -163,6 +163,7 @@ JAZZMIN_SETTINGS = {
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
         "monitor.Patient": "fas fa-users",
+        "monitor.Video": "fa-solid fa-video",
     },
 
     "hide_apps": [],
@@ -189,7 +190,7 @@ JAZZMIN_UI_TWEAKS = {
     "accent": "accent-lightblue",
     "navbar": "navbar-gray-dark navbar-dark",
     "no_navbar_border": False,
-    "navbar_fixed": True,
+    "navbar_fixed": False,
     "layout_boxed": False,
     "footer_fixed": False,
     "sidebar_fixed": False,
@@ -197,7 +198,7 @@ JAZZMIN_UI_TWEAKS = {
     "sidebar_nav_small_text": False,
     "sidebar_disable_expand": False,
     "sidebar_nav_child_indent": False,
-    "sidebar_nav_compact_style": True,
+    "sidebar_nav_compact_style": False,
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": True,
     "theme": "flatly",
