@@ -1,0 +1,64 @@
+#patient-alert-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.5s;
+}
+
+.alert-content {
+    text-align: center;
+    color: white;
+    padding: 3rem;
+    border: 4px solid #fff;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+#patient-name-display {
+    font-size: 6em;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #ff4444;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+    font-family: 'Arial Black', sans-serif;
+}
+
+.instruction-text {
+    font-size: 2em;
+    margin-top: 2em;
+    color: #fff;
+    font-style: italic;
+    letter-spacing: 1px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+#videoPlayer {
+    height: 100vh;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: none;
+}
+
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-self: center;
+}
