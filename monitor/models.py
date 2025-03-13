@@ -3,6 +3,7 @@ from django.utils import timezone
 
 class Patient(models.Model):
     STATUS_CHOICES = [
+        ('absend', 'Abwehsend'),
         ('waiting', 'Wartend'),
         ('in_treatment', 'In Behandlung'),
         ('done', 'Fertig'),
