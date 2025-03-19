@@ -12,7 +12,9 @@ class PatientAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
         extra_context.update({
             'waiting': Patient.objects.filter(status='waiting'),
-            'in_treatment': Patient.objects.filter(status='in_treatment'),
+            'room1': Patient.objects.filter(status='room1'),
+            'room2': Patient.objects.filter(status='room2'),
+            #'in_treatment': Patient.objects.filter(status='in_treatment'),
             'done': Patient.objects.filter(status='done'),
         })
         return super().changelist_view(request, extra_context=extra_context)

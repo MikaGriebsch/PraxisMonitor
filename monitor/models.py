@@ -5,7 +5,9 @@ class Patient(models.Model):
     STATUS_CHOICES = [
         ('absend', 'Abwehsend'),
         ('waiting', 'Wartend'),
-        ('in_treatment', 'In Behandlung'),
+        ('room1', 'Raum 1'),
+        ('room2', 'Raum 2'),
+        #('in_treatment', 'In Behandlung'),
         ('done', 'Fertig'),
     ]
 

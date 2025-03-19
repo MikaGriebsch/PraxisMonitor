@@ -16,10 +16,21 @@
     {% endfor %}
   </div>
 
-  <!-- In Behandlung -->
-  <div class="column" data-status="in_treatment">
-    <h3>In Behandlung</h3>
-    {% for patient in in_treatment %}
+  <div class="column" data-status="room1">
+    <h3>Raum 1</h3>
+    {% for patient in room1 %}
+    <div class="patient-card"
+         data-id="{{ patient.id }}"
+         draggable="true">
+      {{ patient.first_name }} {{ patient.last_name }}
+      <span class="status-badge">{{ patient.get_status_display }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="column" data-status="room2">
+    <h3>Raum 2</h3>
+    {% for patient in room2 %}
     <div class="patient-card"
          data-id="{{ patient.id }}"
          draggable="true">
@@ -58,7 +69,7 @@
 .column {
   background: #e9ecef;
   padding: 15px;
-  width: 20vw;
+  width: 18vw;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

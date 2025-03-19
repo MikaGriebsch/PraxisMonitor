@@ -28,15 +28,26 @@ def video_view(request):
 
 
 def active_patient(request):
-    # Holt den neuesten Patienten mit Statusänderung
-    #active = Patient.objects.filter(status='in_treatment').order_by('-id').first()
-    active = Patient.objects.filter(status='in_treatment').order_by('-status_changed').first()
+    active_room1 = Patient.objects.filter(status='room1').order_by('-status_changed').first()
+    active_room2 = Patient.objects.filter(status='room2').order_by('-status_changed').first()
 
-    if active:
-        return JsonResponse({
+    response_data = {'active': False}
+
+    if active_room1:
+        response_data.update({
             'active': True,
-            'id': active.id,
-            'name': f"{active.first_name} {active.last_name}",
-            'status_changed': active.status_changed  # Neues Feld benötigt!
+            'room': 'Raum1',
+            'id': active_room1.id,
+            'name': f"{active_room1.first_name} {active_room1.last_name}",
+            'status_changed': active_room1.status_changed.isoformat()
         })
-    return JsonResponse({'active': False})
+    elif active_room2:
+        response_data.update({
+            'active': True,
+            'room': 'Raum2',
+            'id': active_room2.id,
+            'name': f"{active_room2.first_name} {active_room2.last_name}",
+            'status_changed': active_room2.status_changed.isoformat()
+        })
+
+    return JsonResponse(response_data)
