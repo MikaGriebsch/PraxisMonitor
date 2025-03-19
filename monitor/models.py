@@ -7,22 +7,20 @@ class Patient(models.Model):
         ('waiting', 'Wartend'),
         ('room1', 'Raum 1'),
         ('room2', 'Raum 2'),
-        #('in_treatment', 'In Behandlung'),
         ('done', 'Fertig'),
     ]
 
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
-    status_changed = models.DateTimeField(auto_now_add=True)  # Neues Feld
+    status_changed = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'Patient'
         verbose_name_plural = 'Patienten'
 
     def save(self, *args, **kwargs):
-        """Aktualisiert den status_changed Zeitstempel bei Statusänderung"""
-        if self.pk:  # Nur bei Updates prüfen
+        if self.pk:
             orig = Patient.objects.get(pk=self.pk)
             if orig.status != self.status:
                 self.status_changed = timezone.now()

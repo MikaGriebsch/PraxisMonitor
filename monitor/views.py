@@ -11,7 +11,6 @@ def update_status(request):
     try:
         data = json.loads(request.body)
         patient = Patient.objects.get(id=data['id'])
-        old_status = patient.status
         patient.status = data['status']
         patient.save()
         return JsonResponse({
