@@ -171,9 +171,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   let draggedItem = null;
-  let originalColumn = null; 
-  let currentPatientId = null; 
-  let isFinalizingDone = false; 
+  let originalColumn = null;
+  let currentPatientId = null;
+  let isFinalizingDone = false;
   let modalWasSaved = false;
 
   const modal = document.getElementById('treatmentNotesModal');
@@ -182,21 +182,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openModal = (patientId) => {
     currentPatientId = patientId;
-    notesTextarea.value = ''; 
+    notesTextarea.value = '';
     modal.style.display = 'block';
     modalWasSaved = false;
   };
 
   const closeModal = () => {
     modal.style.display = 'none';
-    if (!modalWasSaved && draggedItem && currentPatientId && originalColumn && isFinalizingDone) {   
+    if (!modalWasSaved && draggedItem && currentPatientId && originalColumn && isFinalizingDone) {
       originalColumn.appendChild(draggedItem);
     }
     currentPatientId = null;
-    isFinalizingDone = false; 
-    
+    isFinalizingDone = false;
   };
-  
+
   window.onclick = (event) => {
     if (event.target == modal) {
       closeModal();
@@ -207,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentPatientId) return;
 
     const notes = notesTextarea.value;
-    const updateUrl = "{% url 'monitor:update_status_with_notes' %}"; 
+    const updateUrl = "{% url 'monitor:update_status_with_notes' %}";
 
     try {
       const response = await fetch(updateUrl, {
@@ -220,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (response.ok) {
-        modalWasSaved = true; 
+        modalWasSaved = true;
         closeModal();
         window.location.reload(true);
       } else {
@@ -236,10 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const dragStartHandler = (e) => {
     draggedItem = e.target;
-    originalColumn = draggedItem.parentElement; 
+    originalColumn = draggedItem.parentElement;
     e.target.classList.add('dragging');
-    isFinalizingDone = false; 
-    modalWasSaved = false; 
+    isFinalizingDone = false;
+    modalWasSaved = false;
   };
 
   const dragEndHandler = (e) => {
@@ -248,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const dropHandler = async (e) => {
     e.preventDefault();
-    const targetColumnElement = e.currentTarget; 
+    const targetColumnElement = e.currentTarget;
 
     if (!draggedItem) return;
 
@@ -304,3 +303,42 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 {% endblock %}
+
+{% block result_list %}
+  <style>
+    .custom-save-button-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      margin-top: 10px;
+      gap: 27px;
+      padding: 10px;
+    }
+
+    .custom-save-button-container p {
+      margin: 0;
+    }
+
+    .custom-save-button {
+      background-color: #19BC9B;
+      border-radius: 5px;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .custom-save-button:hover {
+      background-color: #159c83; 
+    }
+  </style>
+
+  <div class="custom-save-button-container">
+    <p>Alle Änderungen der Patientenliste:</p>
+    <input type="submit" name="_save" class="default custom-save-button" value="Sichern">
+  </div>
+
+  {{ block.super }}
+{% endblock %}
+
