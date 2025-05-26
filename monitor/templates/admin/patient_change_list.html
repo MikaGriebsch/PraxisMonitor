@@ -8,32 +8,34 @@
     <h3>Wartend</h3>
     {% for patient in waiting %}
     <div class="patient-card"
-         data-id="{{ patient.id }}"
-         draggable="true">
+        data-id="{{ patient.id }}"
+        draggable="true">
       {{ patient.first_name }} {{ patient.last_name }}
       <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
     {% endfor %}
   </div>
 
+  <!-- Raum1 -->
   <div class="column" data-status="room1">
     <h3>Raum 1</h3>
     {% for patient in room1 %}
     <div class="patient-card"
-         data-id="{{ patient.id }}"
-         draggable="true">
+        data-id="{{ patient.id }}"
+        draggable="true">
       {{ patient.first_name }} {{ patient.last_name }}
       <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
     {% endfor %}
   </div>
 
+  <!-- Raum2 -->
   <div class="column" data-status="room2">
     <h3>Raum 2</h3>
     {% for patient in room2 %}
     <div class="patient-card"
-         data-id="{{ patient.id }}"
-         draggable="true">
+        data-id="{{ patient.id }}"
+        draggable="true">
       {{ patient.first_name }} {{ patient.last_name }}
       <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
@@ -45,8 +47,8 @@
     <h3>Fertig</h3>
     {% for patient in done %}
     <div class="patient-card"
-         data-id="{{ patient.id }}"
-         draggable="true">
+        data-id="{{ patient.id }}"
+        draggable="true">
       {{ patient.first_name }} {{ patient.last_name }}
       <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
@@ -54,7 +56,16 @@
   </div>
 </div>
 
-<!-- Standard-Admin-Tabelle unter dem Kanban-Board -->
+<!-- Modal für Behandlungsinformationen -->
+<div id="treatmentNotesModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <h3>Behandlungsinformationen eingeben</h3>
+    <textarea id="treatmentNotesTextarea" placeholder="Was wurde gemacht?"></textarea>
+    <button id="saveTreatmentNotesButton">Speichern und auf Fertig setzen</button>
+  </div>
+</div>
+
+<!-- Standard-Admin-Tabelle unter dem Drag&Drop-Board -->
 {{ block.super }}
 
 <style>
@@ -110,15 +121,125 @@
   opacity: 0.7 !important;
   z-index: 1000 !important;
 }
+
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 8px;
+  position: relative;
+}
+
+#treatmentNotesTextarea {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  min-height: 100px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#saveTreatmentNotesButton {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#saveTreatmentNotesButton:hover {
+  background-color: #45a049;
+}
+
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   let draggedItem = null;
+  let originalColumn = null; 
+  let currentPatientId = null; 
+  let isFinalizingDone = false; 
+  let modalWasSaved = false;
+
+  const modal = document.getElementById('treatmentNotesModal');
+  const saveButton = document.getElementById('saveTreatmentNotesButton');
+  const notesTextarea = document.getElementById('treatmentNotesTextarea');
+
+  const openModal = (patientId) => {
+    currentPatientId = patientId;
+    notesTextarea.value = ''; 
+    modal.style.display = 'block';
+    modalWasSaved = false;
+  };
+
+  const closeModal = () => {
+    modal.style.display = 'none';
+    if (!modalWasSaved && draggedItem && currentPatientId && originalColumn && isFinalizingDone) {   
+      originalColumn.appendChild(draggedItem);
+    }
+    currentPatientId = null;
+    isFinalizingDone = false; 
+    
+  };
+  
+  window.onclick = (event) => {
+    if (event.target == modal) {
+      closeModal();
+    }
+  };
+
+  saveButton.onclick = async () => {
+    if (!currentPatientId) return;
+
+    const notes = notesTextarea.value;
+    const updateUrl = "{% url 'monitor:update_status_with_notes' %}"; 
+
+    try {
+      const response = await fetch(updateUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ id: currentPatientId, status: 'done', notes: notes })
+      });
+
+      if (response.ok) {
+        modalWasSaved = true; 
+        closeModal();
+        window.location.reload(true);
+      } else {
+        const errorData = await response.json();
+        console.error('Fehler beim Speichern der Notizen:', errorData);
+        alert('Fehler beim Speichern: ' + (errorData.error || 'Unbekannter Fehler'));
+      }
+    } catch (error) {
+      console.error('Netzwerkfehler oder anderer Fehler:', error);
+      alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+    }
+  };
 
   const dragStartHandler = (e) => {
     draggedItem = e.target;
+    originalColumn = draggedItem.parentElement; 
     e.target.classList.add('dragging');
+    isFinalizingDone = false; 
+    modalWasSaved = false; 
   };
 
   const dragEndHandler = (e) => {
@@ -127,33 +248,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const dropHandler = async (e) => {
     e.preventDefault();
-    const column = e.currentTarget;
+    const targetColumnElement = e.currentTarget; 
 
     if (!draggedItem) return;
 
-    const newStatus = column.dataset.status;
+    if (targetColumnElement === originalColumn) {
+        return;
+    }
+
+    const newStatus = targetColumnElement.dataset.status;
     const patientId = draggedItem.dataset.id;
 
-    try {
-      const response = await fetch("{% url 'monitor:update_status' %}", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': "{{ csrf_token }}"
-        },
-        body: JSON.stringify({ id: patientId, status: newStatus })
-      });
+    if (newStatus === 'done') {
+      isFinalizingDone = true;
+      targetColumnElement.appendChild(draggedItem);
+      openModal(patientId);
+    } else {
+      isFinalizingDone = false;
+      try {
+        const response = await fetch("{% url 'monitor:update_status' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': "{{ csrf_token }}"
+          },
+          body: JSON.stringify({ id: patientId, status: newStatus })
+        });
 
-      if (response.ok) {
-        // Seite nach erfolgreichem Update neu laden
-        window.location.reload(true);
+        if (response.ok) {
+          window.location.reload(true);
+        } else {
+          console.error('Fehler beim direkten Statusupdate:', await response.text());
+          if (originalColumn) {
+            originalColumn.appendChild(draggedItem);
+          }
+        }
+      } catch (error) {
+        console.error('Fehler beim direkten Statusupdate:', error);
+        if (originalColumn) {
+          originalColumn.appendChild(draggedItem);
+        }
       }
-    } catch (error) {
-      console.error('Fehler:', error);
     }
   };
 
-  // Event Listener
   document.querySelectorAll('.patient-card').forEach(card => {
     card.addEventListener('dragstart', dragStartHandler);
     card.addEventListener('dragend', dragEndHandler);

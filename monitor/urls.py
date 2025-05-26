@@ -1,11 +1,11 @@
 from django.urls import path
 from . import views
 
-# In der App-URLs (monitor/urls.py)
 app_name = 'monitor'
 
 urlpatterns = [
     path('update_status/', views.update_status, name='update_status'),
-    path('active_patient/', views.active_patient, name='active_patient'),  # Name muss genau passen
+    path('update_status_with_notes/', views.update_status_with_notes, name='update_status_with_notes'), 
+    path('active_patient/', views.active_patient, name='active_patient'), 
     path('', views.video_view, name='video_view'),
 ]

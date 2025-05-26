@@ -3,7 +3,8 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
 import json
 from django.shortcuts import render
-from .models import Video, Patient
+from .models import Video, Patient, PatientHistory 
+from django.utils import timezone 
 
 @staff_member_required
 @require_http_methods(["POST"])
@@ -20,6 +21,43 @@ def update_status(request):
         })
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@staff_member_required
+@require_http_methods(["POST"])
+def update_status_with_notes(request):
+    try:
+        data = json.loads(request.body)
+        patient_id = data.get('id')
+        new_status = data.get('status')
+        notes = data.get('notes', '')
+
+        if not patient_id or not new_status:
+            return JsonResponse({'status': 'error', 'message': 'Patienten-ID oder Status fehlt.'}, status=400)
+
+        patient = Patient.objects.get(id=patient_id)
+
+        PatientHistory.objects.create(
+            patient=patient,
+            notes=notes,
+            visit_date=timezone.now()
+        )
+
+        #Patient-Status und Notizen aktualisieren
+        patient.status = new_status
+        patient.last_treatment_notes = notes
+        patient.save() 
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Status und Notizen erfolgreich aktualisiert.',
+            'patient_id': patient.id,
+            'new_status_display': patient.get_status_display(),
+            'notes': notes
+        })
+    except Patient.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Patient nicht gefunden.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def video_view(request):
     videos = Video.objects.all()

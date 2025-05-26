@@ -7,7 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         patients = Patient.objects.filter(status='done')
-        cutoff_time = timezone.now() - timezone.timedelta(hours=1)
+        cutoff_time = timezone.now() - timezone.timedelta(minutes=2)
 
         for patient in patients:
             if patient.status_changed <= cutoff_time:
