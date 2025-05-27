@@ -19,6 +19,7 @@ class Patient(models.Model):
     class Meta:
         verbose_name = 'Patient'
         verbose_name_plural = 'Patienten'
+        unique_together = (('first_name', 'last_name'),)
 
     def save(self, *args, **kwargs):
         if self.pk:
