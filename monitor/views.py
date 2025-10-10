@@ -1,9 +1,10 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.csrf import csrf_exempt
 import json
 from django.shortcuts import render
-from .models import Video, Patient, PatientHistory 
+from .models import Media, Patient, PatientHistory 
 from django.utils import timezone 
 
 @staff_member_required
@@ -59,9 +60,9 @@ def update_status_with_notes(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-def video_view(request):
-    videos = Video.objects.all()
-    return render(request, 'video_player.html', {'videos': videos})
+def media_view(request):
+    media_items = Media.objects.all().order_by('order', 'id')
+    return render(request, 'video_player.html', {'media_items': media_items})
 
 
 def active_patient(request):

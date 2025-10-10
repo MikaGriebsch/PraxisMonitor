@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Video Wall</title>
+    <title>Media Wall</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/video_player.css' %}">
 </head>
@@ -13,9 +13,11 @@
         </div>
     </div>
 
-    <video id="videoPlayer" controls autoplay muted>
+    <video id="videoPlayer" controls autoplay muted style="display: none;">
         <source src="" type="video/mp4">
     </video>
+
+    <img id="imagePlayer" style="display: none; width: 100%; height: 100%; object-fit: contain;" />
 
     <audio id="alertSound" src="{% static 'sounds/ping.mp3' %}"></audio>
 
@@ -29,29 +31,72 @@
         // Zustandsverwaltung
         let state = {
             currentTimeout: null,
+            mediaTimeout: null,
             lastProcessedPatient: null,
-            currentVideo: 0,
-            videos: [{% for video in videos %}'{{ video.video_file.url }}',{% endfor %}],
-            player: document.getElementById('videoPlayer'),
+            currentMedia: 0,
+            media: [
+                {% for media in media_items %}
+                {
+                    'url': '{{ media.media_file.url }}',
+                    'type': '{{ media.media_type }}',
+                    'duration': {{ media.display_duration }},
+                    'title': '{{ media.title|escapejs }}'
+                },
+                {% endfor %}
+            ],
+            videoPlayer: document.getElementById('videoPlayer'),
+            imagePlayer: document.getElementById('imagePlayer'),
             alertContainer: document.getElementById('patient-alert-container')
         };
 
-        // Video-Initialisierung
-        function initializeVideo() {
-            if(state.videos.length > 0) {
-                state.player.style.display = 'block';
+        // Media-Initialisierung
+        function initializeMedia() {
+            if(state.media.length > 0) {
                 playNext();
-                state.player.addEventListener('ended', playNext);
             }
         }
 
         function playNext() {
-            state.currentVideo = (state.currentVideo + 1) % state.videos.length;
-            state.player.src = state.videos[state.currentVideo];
-            state.player.play().catch(() => {
-                state.player.muted = true;
-                state.player.play();
-            });
+            if(state.media.length === 0) return;
+            
+            const currentMediaItem = state.media[state.currentMedia];
+            
+            // Verstecke beide Player
+            state.videoPlayer.style.display = 'none';
+            state.imagePlayer.style.display = 'none';
+            
+            // Stoppe aktuelles Video falls läuft
+            state.videoPlayer.pause();
+            
+            // Lösche eventuellen Media-Timeout
+            if(state.mediaTimeout) {
+                clearTimeout(state.mediaTimeout);
+                state.mediaTimeout = null;
+            }
+            
+            if(currentMediaItem.type === 'video') {
+                // Zeige Video
+                state.videoPlayer.style.display = 'block';
+                state.videoPlayer.src = currentMediaItem.url;
+                state.videoPlayer.play().catch(() => {
+                    state.videoPlayer.muted = true;
+                    state.videoPlayer.play();
+                });
+            } else if(currentMediaItem.type === 'photo') {
+                // Zeige Foto
+                state.imagePlayer.style.display = 'block';
+                state.imagePlayer.src = currentMediaItem.url;
+                
+                // Setze Timeout für Foto-Anzeigedauer
+                state.mediaTimeout = setTimeout(() => {
+                    goToNextMedia();
+                }, currentMediaItem.duration * 1000);
+            }
+        }
+
+        function goToNextMedia() {
+            state.currentMedia = (state.currentMedia + 1) % state.media.length;
+            playNext();
         }
 
         // Patientenstatus-Überprüfung
@@ -73,8 +118,15 @@
                     if(isNewPatient || isNewStatus) {
                         state.lastProcessedPatient = data;
 
-                        state.player.style.display = 'none';
-                        state.player.pause();
+                        // Pausiere aktuelles Media
+                        state.videoPlayer.style.display = 'none';
+                        state.imagePlayer.style.display = 'none';
+                        state.videoPlayer.pause();
+                        if(state.mediaTimeout) {
+                            clearTimeout(state.mediaTimeout);
+                            state.mediaTimeout = null;
+                        }
+
                         state.alertContainer.style.display = 'flex';
                         document.getElementById('patient-name-display').textContent = data.name;
                         document.getElementById('room_num').textContent = data.room;
@@ -86,14 +138,14 @@
 
                         state.currentTimeout = setTimeout(() => {
                             state.alertContainer.style.display = 'none';
-                            state.player.style.display = 'block';
-                            if(state.player.paused) state.player.play();
+                            playNext(); // Setze Media fort
                         }, config.alertDuration);
                     }
                 } else {
                     state.alertContainer.style.display = 'none';
-                    state.player.style.display = 'block';
-                    if(state.player.paused) state.player.play();
+                    if(state.videoPlayer.style.display === 'none' && state.imagePlayer.style.display === 'none') {
+                        playNext(); // Setze Media fort
+                    }
                 }
             } catch(e) {
                 console.error('Fehler:', e);
@@ -102,7 +154,11 @@
 
         // Initialisierung
         window.addEventListener('load', () => {
-            initializeVideo();
+            initializeMedia();
+            
+            // Event Listener für Video-Ende
+            state.videoPlayer.addEventListener('ended', goToNextMedia);
+            
             setInterval(checkActivePatient, config.checkInterval);
         });
     </script>

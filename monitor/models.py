@@ -46,10 +46,30 @@ class PatientHistory(models.Model):
         return f"Eintrag für {self.patient} am {self.visit_date.strftime('%Y-%m-%d %H:%M')}"
 
 
-class Video(models.Model):
-    title = models.CharField(max_length=100)
-    video_file = models.FileField(upload_to='videos/')
-    created_at = models.DateTimeField(auto_now_add=True)
+class Media(models.Model):
+    MEDIA_TYPE_CHOICES = [
+        ('video', 'Video'),
+        ('photo', 'Foto'),
+    ]
+    
+    title = models.CharField(max_length=100, verbose_name="Titel")
+    media_file = models.FileField(upload_to='media/', verbose_name="Mediendatei")
+    media_type = models.CharField(max_length=10, choices=MEDIA_TYPE_CHOICES, default='video', verbose_name="Medientyp")
+    display_duration = models.PositiveIntegerField(default=10, help_text="Anzeigedauer in Sekunden (nur für Fotos)", verbose_name="Anzeigedauer")
+    order = models.PositiveIntegerField(blank=True, null=True, verbose_name="Reihenfolge")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Erstellt am")
+
+    class Meta:
+        verbose_name = 'Medium'
+        verbose_name_plural = 'Medien'
+        ordering = ['order', 'id']
 
     def __str__(self):
-        return self.title
+        return f"{self.title} ({self.get_media_type_display()})"
+    
+    def save(self, *args, **kwargs):
+        if self.order is None:
+            # Setze die Reihenfolge automatisch als nächste verfügbare Nummer
+            last_order = Media.objects.aggregate(models.Max('order'))['order__max']
+            self.order = (last_order or 0) + 1
+        super().save(*args, **kwargs)
