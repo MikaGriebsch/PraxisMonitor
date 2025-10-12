@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'monitor.apps.MonitorConfig',
+    'django_crontab',
 ]
 
 MIDDLEWARE = [
@@ -215,3 +216,8 @@ JAZZMIN_UI_TWEAKS = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Cron Jobs - Automatische Ausführung alle 2 Minuten
+CRONJOBS = [
+    ('*/2 * * * *', 'django.core.management.call_command', ['update_patient_status'], {'verbosity': 0}),
+]

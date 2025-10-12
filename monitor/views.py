@@ -23,35 +23,6 @@ def update_status(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-@staff_member_required
-@require_http_methods(["POST"])
-def update_status_with_notes(request):
-    try:
-        data = json.loads(request.body)
-        patient_id = data.get('id')
-        new_status = data.get('status')
-        notes = data.get('notes', '')
-
-        if not patient_id or not new_status:
-            return JsonResponse({'status': 'error', 'message': 'Patienten-ID oder Status fehlt.'}, status=400)
-
-        patient = Patient.objects.get(id=patient_id)
-
-        #Patient-Status aktualisieren
-        patient.status = new_status
-        patient.save() 
-
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Status erfolgreich aktualisiert.',
-            'patient_id': patient.id,
-            'new_status_display': patient.get_status_display()
-        })
-    except Patient.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Patient nicht gefunden.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
 def media_view(request):
     media_items = Media.objects.all().order_by('order', 'id')
     return render(request, 'video_player.html', {'media_items': media_items})
