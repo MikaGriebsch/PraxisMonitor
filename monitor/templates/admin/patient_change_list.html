@@ -10,7 +10,7 @@
     <div class="patient-card"
         data-id="{{ patient.id }}"
         draggable="true">
-      {{ patient.gender }} {{ patient.last_name }}
+      <a href="{% url 'admin:monitor_patient_change' patient.id %}">{{ patient.gender }} {{ patient.last_name }}</a>
       <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
     {% endfor %}
@@ -23,7 +23,7 @@
     <div class="patient-card"
         data-id="{{ patient.id }}"
         draggable="true">
-      {{ patient.gender }} {{ patient.last_name }}
+      <a href="{% url 'admin:monitor_patient_change' patient.id %}">{{ patient.gender }} {{ patient.last_name }}</a>
       <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
     {% endfor %}
@@ -36,7 +36,7 @@
     <div class="patient-card"
         data-id="{{ patient.id }}"
         draggable="true">
-      {{ patient.gender }} {{ patient.last_name }}
+      <a href="{% url 'admin:monitor_patient_change' patient.id %}">{{ patient.gender }} {{ patient.last_name }}</a>
       <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
     {% endfor %}
@@ -49,7 +49,7 @@
     <div class="patient-card"
         data-id="{{ patient.id }}"
         draggable="true">
-      {{ patient.gender }} {{ patient.last_name }}
+      <a href="{% url 'admin:monitor_patient_change' patient.id %}">{{ patient.gender }} {{ patient.last_name }}</a>
       <span class="status-badge">{{ patient.get_status_display }}</span>
     </div>
     {% endfor %}
