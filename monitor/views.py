@@ -4,7 +4,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.shortcuts import render
-from .models import Media, Patient, PatientHistory 
+from .models import Media, Patient 
 from django.utils import timezone 
 
 @staff_member_required
@@ -37,23 +37,15 @@ def update_status_with_notes(request):
 
         patient = Patient.objects.get(id=patient_id)
 
-        PatientHistory.objects.create(
-            patient=patient,
-            notes=notes,
-            visit_date=timezone.now()
-        )
-
-        #Patient-Status und Notizen aktualisieren
+        #Patient-Status aktualisieren
         patient.status = new_status
-        patient.last_treatment_notes = notes
         patient.save() 
 
         return JsonResponse({
             'status': 'success',
-            'message': 'Status und Notizen erfolgreich aktualisiert.',
+            'message': 'Status erfolgreich aktualisiert.',
             'patient_id': patient.id,
-            'new_status_display': patient.get_status_display(),
-            'notes': notes
+            'new_status_display': patient.get_status_display()
         })
     except Patient.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Patient nicht gefunden.'}, status=404)
@@ -76,7 +68,7 @@ def active_patient(request):
             'active': True,
             'room': 'Raum1',
             'id': active_room1.id,
-            'name': f"{active_room1.first_name} {active_room1.last_name}",
+            'name': f"{active_room1.gender} {active_room1.last_name}",
             'status_changed': active_room1.status_changed.isoformat()
         })
     elif active_room2:
@@ -84,7 +76,7 @@ def active_patient(request):
             'active': True,
             'room': 'Raum2',
             'id': active_room2.id,
-            'name': f"{active_room2.first_name} {active_room2.last_name}",
+            'name': f"{active_room2.gender} {active_room2.last_name}",
             'status_changed': active_room2.status_changed.isoformat()
         })
 
