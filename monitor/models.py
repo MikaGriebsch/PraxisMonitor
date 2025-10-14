@@ -41,7 +41,7 @@ class Media(models.Model):
     title = models.CharField(max_length=100, verbose_name="Titel")
     media_file = models.FileField(upload_to='media/', verbose_name="Mediendatei")
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPE_CHOICES, default='video', verbose_name="Medientyp")
-    display_duration = models.PositiveIntegerField(default=10, help_text="Anzeigedauer in Sekunden (nur für Fotos)", verbose_name="Anzeigedauer")
+    display_duration = models.PositiveIntegerField(default=60, help_text="Anzeigedauer in Sekunden (nur für Fotos)", verbose_name="Anzeigedauer")
     order = models.PositiveIntegerField(blank=True, null=True, verbose_name="Reihenfolge")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Erstellt am")
 
