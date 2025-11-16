@@ -9,7 +9,7 @@
     <div id="patient-alert-container">
         <div class="alert-content">
             <h1 id="patient-name-display"></h1>
-            <p class="instruction-text">Bitte begeben Sie sich umgehend in <span id="room_num" class="room_num"></span></p>
+            <p class="instruction-text">Bitte begeben Sie sich in <span id="room_num" class="room_num"></span>.</p>
         </div>
     </div>
 
@@ -58,22 +58,22 @@
 
         function playNext() {
             if(state.media.length === 0) return;
-            
+
             const currentMediaItem = state.media[state.currentMedia];
-            
+
             // Verstecke beide Player
             state.videoPlayer.style.display = 'none';
             state.imagePlayer.style.display = 'none';
-            
+
             // Stoppe aktuelles Video falls läuft
             state.videoPlayer.pause();
-            
+
             // Lösche eventuellen Media-Timeout
             if(state.mediaTimeout) {
                 clearTimeout(state.mediaTimeout);
                 state.mediaTimeout = null;
             }
-            
+
             if(currentMediaItem.type === 'video') {
                 // Zeige Video
                 state.videoPlayer.style.display = 'block';
@@ -86,7 +86,7 @@
                 // Zeige Foto
                 state.imagePlayer.style.display = 'block';
                 state.imagePlayer.src = currentMediaItem.url;
-                
+
                 // Setze Timeout für Foto-Anzeigedauer
                 state.mediaTimeout = setTimeout(() => {
                     goToNextMedia();
@@ -155,10 +155,10 @@
         // Initialisierung
         window.addEventListener('load', () => {
             initializeMedia();
-            
+
             // Event Listener für Video-Ende
             state.videoPlayer.addEventListener('ended', goToNextMedia);
-            
+
             setInterval(checkActivePatient, config.checkInterval);
         });
     </script>
