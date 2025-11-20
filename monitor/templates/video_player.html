@@ -19,13 +19,13 @@
 
     <img id="imagePlayer" style="display: none; width: 100%; height: 100%; object-fit: contain;" />
 
-    <audio id="alertSound" src="{% static 'sounds/ping.mp3' %}"></audio>
+    <audio id="alertSound" src="{% static 'sounds/ping.mp3' %}?v=2"></audio>
 
     <script>
         // Konfiguration
         const config = {
             checkInterval: 1000,
-            alertDuration: 5000
+            alertDuration: 30000
         };
 
         // Zustandsverwaltung
@@ -131,7 +131,8 @@
                         document.getElementById('patient-name-display').textContent = data.name;
                         document.getElementById('room_num').textContent = data.room;
 
-                        // Sound abspielen
+                        // Sound abspielen mit erhöhter Lautstärke
+                        alertSound.volume = 1.0; // Maximale Lautstärke (0.0 - 1.0)
                         alertSound.play().catch(error => console.log('Ton konnte nicht abgespielt werden:', error));
 
                         if(state.currentTimeout) clearTimeout(state.currentTimeout);
